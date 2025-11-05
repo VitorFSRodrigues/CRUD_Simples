@@ -4,51 +4,25 @@ namespace App\Livewire\Powergrid;
 
 use App\Models\Cliente;
 use Illuminate\Database\Eloquent\Builder;
-use Livewire\Attributes\On;
-use Livewire\Component;
 use PowerComponents\LivewirePowerGrid\{PowerGridComponent, PowerGridFields, Column, Button};
-use PowerComponents\LivewirePowerGrid\Facades\{Filter, PowerGrid, Rule};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use Illuminate\Support\Carbon;
+use PowerComponents\LivewirePowerGrid\Facades\{PowerGrid};
+use Illuminate\Contracts\View\View;
 
 final class ClienteOrcamentoTable extends PowerGridComponent
 {
-    //use ActionButton;
-
     public string $tableName = 'clientes-orcamentos';
-
-    /** Form (Create/Edit) */
-    public array $form = [
-        'nome_cliente'      => '',
-        'endereco_completo' => '',
-        'municipio'         => '',
-        'estado'            => '',
-        'pais'              => '',
-        'cnpj'              => '',
-    ];
-
-    public bool $isEdit = false;
-    public ?int $editingId = null;
-    public ?int $deletingId = null;
 
     public function setUp(): array
     {
-        $this->showCheckBox();
-
         return [
-            PowerGrid::header()->showSearchInput(),
-            PowerGrid::footer()->showPerPage()->showRecordCount(),
+            PowerGrid::header()->showToggleColumns(),
+            PowerGrid::footer()->showPerPage(10)->showRecordCount(),
         ];
     }
 
     public function datasource(): Builder
     {
         return Cliente::query()->orderBy('id', 'asc');
-    }
-
-    public function relationSearch(): array
-    {
-        return [];
     }
 
     public function fields(): PowerGridFields
@@ -60,73 +34,42 @@ final class ClienteOrcamentoTable extends PowerGridComponent
             ->add('municipio')
             ->add('estado')
             ->add('pais')
-            ->add('cnpj')
-            ->add('created_at_formatted', fn (Cliente $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
+            ->add('cnpj');
     }
 
     public function columns(): array
     {
         return [
-            Column::make('Id', 'id'),
-            Column::make('Nome Cliente', 'nome_cliente')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Endereco Completo', 'endereco_completo')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Municipio', 'municipio')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Estado', 'estado')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Pais', 'pais')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Cnpj', 'cnpj')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Created at', 'created_at_formatted', 'created_at')
-                ->sortable(),
-
-            Column::action('Ações')
+            Column::make('ID','id')->sortable()->searchable(),
+            Column::make('Cliente','nome_cliente')->searchable()->sortable(),
+            Column::make('Endereço','endereco_completo')->searchable(),
+            Column::make('Município','municipio')->searchable()->sortable(),
+            Column::make('Estado','estado')->searchable()->sortable(),
+            Column::make('País','pais')->searchable()->sortable(),
+            Column::make('CNPJ','cnpj')->searchable(),
+            Column::action('Ações'),
         ];
     }
 
-    public function filters(): array
-    {
-        return [
-            Filter::datetimepicker('created_at'),
-        ];
-    }
-
-    /** HEADER: botão "Novo cadastro" */
+    /** Botão de "Novo cadastro" (CREATE) */
     public function header(): array
     {
         return [
             Button::add('novo')
                 ->slot('Novo cadastro')
                 ->class('btn btn-primary')
-                ->openModal('clientes.create-edit', []), // sem id -> CREATE
+                ->openModal('clientes.create-edit', []), // CREATE -> sem id
         ];
     }
 
-    /* =======================
-     * AÇÕES (botões na coluna): Editar / Deletar
-     * ======================= */
+    /** Ações de linha (EDIT/DELETE) */
     public function actions($row): array
     {
         return [
             Button::add('edit')
                 ->slot('Editar')
                 ->class('btn btn-xs btn-warning')
-                ->openModal('clientes.create-edit', ['clienteId' => 'id']), // 'id' vira $row->id
+                ->openModal('clientes.create-edit', ['clienteId' => 'id']),
 
             Button::add('delete')
                 ->slot('Deletar')
@@ -134,112 +77,4 @@ final class ClienteOrcamentoTable extends PowerGridComponent
                 ->openModal('clientes.confirm-delete', ['clienteId' => 'id']),
         ];
     }
-
-    /* ==== Eventos para abrir modais ==== */
-    #[On('open-create-modal')]
-    public function openCreateModal(): void
-    {
-        $this->resetForm();
-        $this->isEdit = false;
-        $this->dispatch('show-create-edit-modal');
-    }
-
-    #[On('open-edit-modal')]
-    public function openEditModal($rowId): void
-    {
-        $cliente = Cliente::findOrFail((int)$rowId);
-        $this->form = [
-            'nome_cliente'      => $cliente->nome_cliente,
-            'endereco_completo' => $cliente->endereco_completo,
-            'municipio'         => $cliente->municipio,
-            'estado'            => $cliente->estado,
-            'pais'              => $cliente->pais,
-            'cnpj'              => $cliente->cnpj,
-        ];
-        $this->editingId = $cliente->id;
-        $this->isEdit = true;
-        $this->dispatch('show-create-edit-modal');
-    }
-
-    #[On('open-delete-modal')]
-    public function openDeleteModal($rowId): void
-    {
-        $this->deletingId = (int)$rowId;
-        $this->dispatch('show-delete-modal');
-    }
-
-    /* ==== Persistência ==== */
-    public function save(): void
-    {
-        $data = $this->validate([
-            'form.nome_cliente'      => 'required|string|max:255',
-            'form.endereco_completo' => 'required|string|max:255',
-            'form.municipio'         => 'required|string|max:255',
-            'form.estado'            => 'required|string|max:255',
-            'form.pais'              => 'required|string|max:255',
-            'form.cnpj'              => 'required|string|max:255',
-        ])['form'];
-
-        if ($this->isEdit && $this->editingId) {
-            Cliente::findOrFail($this->editingId)->update($data);
-            $this->dispatch('pg:eventRefresh-default'); // atualiza tabela
-            $this->dispatch('toast', detail: 'Cliente atualizado com sucesso');
-        } else {
-            Cliente::create($data);
-            $this->dispatch('pg:eventRefresh-default');
-            $this->dispatch('toast', detail: 'Cliente criado com sucesso');
-        }
-
-        $this->dispatch('hide-create-edit-modal');
-        $this->resetForm();
-    }
-
-    public function deleteConfirm(): void
-    {
-        if ($this->deletingId) {
-            Cliente::findOrFail($this->deletingId)->delete();
-            $this->dispatch('pg:eventRefresh-default');
-            $this->dispatch('toast', detail: 'Cliente excluído com sucesso');
-        }
-        $this->deletingId = null;
-        $this->dispatch('hide-delete-modal');
-    }
-
-    private function resetForm(): void
-    {
-        $this->form = [
-            'nome_cliente'      => '',
-            'endereco_completo' => '',
-            'municipio'         => '',
-            'estado'            => '',
-            'pais'              => '',
-            'cnpj'              => '',
-        ];
-        $this->isEdit = false;
-        $this->editingId = null;
-    }
-
-    /* ==== Modais (Blade inline) ==== */
-    // public function render()
-    // {
-    //     return view('livewire.powergrid.cliente-orcamento-table');
-    // }
-
-    // #[\Livewire\Attributes\On('edit')]
-    // public function edit($rowId): void
-    // {
-    //     $this->js('alert('.$rowId.')');
-    // }
-
-    /*
-    public function actionRules($row): array
-    {
-       return [
-            // Hide button edit for ID 1
-            Rule::button('edit')
-                ->when(fn($row) => $row->id === 1)
-                ->hide(),
-        ];
-    }
-    */
 }
