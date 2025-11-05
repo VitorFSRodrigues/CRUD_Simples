@@ -69,12 +69,12 @@ final class ClienteOrcamentoTable extends PowerGridComponent
             Button::add('edit')
                 ->slot('Editar')
                 ->class('btn btn-xs btn-warning')
-                ->openModal('clientes.create-edit', ['clienteId' => 'id']),
+                ->openModal('clientes.create-edit', ['clienteId' => $row->id]),   // <- aqui
 
             Button::add('delete')
                 ->slot('Deletar')
                 ->class('btn btn-xs btn-danger')
-                ->openModal('clientes.confirm-delete', ['clienteId' => 'id']),
+                ->openModal('clientes.confirm-delete', ['clienteId' => $row->id]), // <- e aqui
         ];
     }
 }

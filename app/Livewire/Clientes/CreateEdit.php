@@ -25,21 +25,13 @@ class CreateEdit extends ModalComponent
 
     public function mount(int|string|null $clienteId = null): void
     {
-        $this->clienteId = $clienteId;
-
-        // CREATE: nada de ID → garanta form limpo e sem validação pendente
-        if ($clienteId === null || $clienteId === '' || $clienteId === 'id' || !is_numeric($clienteId)) {
-            $this->resetValidation();
-            $this->form = [
-                'nome_cliente'      => '',
-                'endereco_completo' => '',
-                'municipio'         => '',
-                'estado'            => '',
-                'pais'              => '',
-                'cnpj'              => '',
-            ];
+        if ($clienteId === null || $clienteId === '') {
+            // CREATE
+            $this->clienteId = null;
             return;
         }
+        
+        $this->clienteId = (int) $clienteId;
 
         // EDIT: carrega os dados
         $c = Cliente::findOrFail((int) $clienteId);
