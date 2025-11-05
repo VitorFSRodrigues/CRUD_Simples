@@ -23,6 +23,12 @@ npm install
 npm run dev
 ```
 
+Caso exista uma arquitetura já preparada:
+```bash
+composer install
+npm install
+```
+
 ### 0.1) Banco SQLite
 
 ```bash
@@ -48,7 +54,6 @@ DB_DATABASE=database/database.sqlite
 # AdminLTE (tema + layout)
 composer require jeroennoten/laravel-adminlte
 php artisan adminlte:install
-php artisan adminlte:install --only=assets
 php artisan adminlte:plugins install
 
 # Livewire v3
@@ -226,7 +231,7 @@ Route::view('/clientes-orcamentos', 'clientes.index')->name('clientes.index');
 ## 7) PowerGrid – criação do componente da tabela
 
 ```bash
-php artisan powergrid:create ClienteOrcamentoTable --model=App\Models\Cliente --folder=Powergrid
+php artisan powergrid:create Powergrid/ClienteOrcamentoTable --model=App\Models\Cliente --folder=Powergrid
 ```
 
 Arquivo gerado: `app/Livewire/Powergrid/ClienteOrcamentoTable.php`
@@ -312,6 +317,9 @@ Crie os componentes Livewire **estendendo** `LivewireUI\Modal\ModalComponent`.
 `app/Livewire/Clientes/CreateEdit.php`:
 
 ```php
+<?php
+namespace App\Livewire\Clientes;
+
 use App\Models\Cliente;
 use LivewireUI\Modal\ModalComponent;
 
@@ -396,6 +404,9 @@ class CreateEdit extends ModalComponent
 `app/Livewire/Clientes/ConfirmDelete.php`:
 
 ```php
+<?php
+namespace App\Livewire\Clientes;
+
 use App\Models\Cliente;
 use LivewireUI\Modal\ModalComponent;
 
