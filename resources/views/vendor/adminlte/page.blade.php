@@ -15,6 +15,8 @@
 
 @section('body_data', $layoutHelper->makeBodyData())
 
+@livewire('wire-elements-modal')
+
 @section('body')
     <div class="wrapper">
 

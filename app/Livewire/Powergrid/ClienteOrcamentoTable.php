@@ -113,25 +113,25 @@ final class ClienteOrcamentoTable extends PowerGridComponent
             Button::add('novo')
                 ->slot('Novo cadastro')
                 ->class('btn btn-primary')
-                ->dispatch('open-create-modal', []),
+                ->openModal('clientes.create-edit', []), // sem id -> CREATE
         ];
     }
 
     /* =======================
      * AÇÕES (botões na coluna): Editar / Deletar
      * ======================= */
-    public function actions(Cliente $row): array
+    public function actions($row): array
     {
         return [
             Button::add('edit')
                 ->slot('Editar')
                 ->class('btn btn-xs btn-warning')
-                ->dispatch('open-edit-modal', ['rowId' => $row->id]),
+                ->openModal('clientes.create-edit', ['clienteId' => 'id']), // 'id' vira $row->id
 
             Button::add('delete')
                 ->slot('Deletar')
                 ->class('btn btn-xs btn-danger')
-                ->dispatch('open-delete-modal', ['rowId' => $row->id]),
+                ->openModal('clientes.confirm-delete', ['clienteId' => 'id']),
         ];
     }
 
